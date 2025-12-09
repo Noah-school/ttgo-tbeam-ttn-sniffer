@@ -111,7 +111,6 @@ void setup()
 }
 
 void loop() {
-    // Process any received packets (moved from interrupt context to main loop)
     processLoRaPacket();
     delay(100); 
 }
