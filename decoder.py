@@ -104,28 +104,19 @@ def decode_from_hex(hex_str: str) -> Dict[str, Union[int, str, Dict[str, Union[i
     return decode_packet_bytes(parse_hex_string(hex_str))
 
 
-def decode_from_json_line(json_line: str) -> Dict[str, Union[int, str, Dict[str, Union[int, str, bytes]]]]:
-    record = json.loads(json_line)
-    if "payload_hex" not in record:
-        raise ValueError("JSON line must contain payload_hex")
-    return decode_from_hex(record["payload_hex"])
 
 
 def main():
     parser = argparse.ArgumentParser(description="Decode TTGO LoRa sniffer packets")
     parser.add_argument("--hex", help="Space-separated hex payload (payload_hex)")
-    parser.add_argument("--json", help="Full JSON line containing payload_hex")
     args = parser.parse_args()
 
-    if not args.hex and not args.json:
-        parser.error("Provide --hex or --json")
+    if not args.hex:
+        parser.error("Provide --hex")
 
     try:
-        if args.hex:
-            decoded = decode_from_hex(args.hex)
-        else:
-            decoded = decode_from_json_line(args.json)
-    except Exception as exc:  # Keep simple for CLI use
+        decoded = decode_from_hex(args.hex)
+    except Exception as exc: 
         print(f"Decode error: {exc}")
         return
 
