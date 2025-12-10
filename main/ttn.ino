@@ -57,10 +57,24 @@ void processLoRaPacket() {
   if (!packet_received) return;
   packet_received = false;
   
-  // Read packet payload
-  String payload = "";
-  while (LoRa.available()) {
-    payload += (char)LoRa.read();
+  // Read packet payload as raw bytes so we can show ASCII and hex
+  uint8_t bytes[256];
+  int len = 0;
+  while (LoRa.available() && len < (int)sizeof(bytes)) {
+    int b = LoRa.read();
+    if (b < 0) break;
+    bytes[len++] = static_cast<uint8_t>(b);
+  }
+
+  String payload = "";       // ASCII-ish view
+  String hexPayload = "";    // Raw hex view
+  for (int i = 0; i < len; i++) {
+    payload += (char)bytes[i];
+
+    char buf[4];
+    snprintf(buf, sizeof(buf), "%02X", bytes[i]);
+    if (i > 0) hexPayload += " ";
+    hexPayload += buf;
   }
   
   float frequency = channels[LORA_CHANNEL_INDEX] / 1000000.0;
@@ -80,8 +94,8 @@ void processLoRaPacket() {
   snprintf(buffer, sizeof(buffer), "SNR: %.2f dB", snr);
   screen_print(buffer);
 
-  screen_print("Payload:");
-  screen_print(payload);
+  screen_print("HEX payload:");
+  screen_print(hexPayload.length() ? hexPayload : String("<empty>"));
 
   screen_display();
 
@@ -94,7 +108,11 @@ void processLoRaPacket() {
   Serial.print(snr, 2);
   Serial.print(", \"payload\": \"");
   Serial.print(jsonEscape(payload));
-  Serial.println("\"}");
+  Serial.print("\", \"payload_hex\": \"");
+  Serial.print(hexPayload);
+  Serial.print("\", \"payload_len\": ");
+  Serial.print(len);
+  Serial.println("}");
 }
 
 // Function to set up the LoRa module
